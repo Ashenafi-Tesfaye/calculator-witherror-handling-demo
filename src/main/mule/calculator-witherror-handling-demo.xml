@@ -83,7 +83,7 @@ output application/java
 				</ee:transform>
 			</when>
 			<otherwise >
-				<logger level="WARN" doc:name="Logger" doc:id="399d02d3-1ca2-477c-9304-0f05a90aa07c" message="A valid number or operator is not entered. Please check you inputs"/>
+				<logger level="WARN" doc:name="Logger" doc:id="399d02d3-1ca2-477c-9304-0f05a90aa07c" message="A valid number or operator is not entered. Please kindly check you inputs"/>
 				<ee:transform doc:name="Display error mesage" doc:id="1182ffee-5043-4f29-88df-c47a9f185f8e" >
 					<ee:message >
 						<ee:set-payload ><![CDATA[%dw 2.0
