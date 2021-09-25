@@ -91,7 +91,7 @@ output application/json
 ---
 {
 	"status": 500,
-	"Error Message ": "A valid number or operator is not entered. Please check you inputs"
+	"Error Message ": "A valid number or operator is not entered. Please kindly check you inputs"
 }]]></ee:set-payload>
 					</ee:message>
 				</ee:transform>
