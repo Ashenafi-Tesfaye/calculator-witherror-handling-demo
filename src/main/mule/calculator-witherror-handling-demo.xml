@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns:java="http://www.mulesoft.org/schema/mule/java"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/java http://www.mulesoft.org/schema/mule/java/current/mule-java.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="8d145c7c-1a76-4801-9574-286cdb7fe820" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<sub-flow name="validate-the-inputs-and-set_vars" doc:id="26b3aed3-2cf8-4d14-9b87-5d7abc255399" >
+		<validation:is-number numberType="FLOAT" doc:name="Validate num1" doc:id="00ae46eb-0eb2-4715-9aba-05c53e049c1d" value="#[attributes.queryParams.num1]" message="Please enter a valid integer number example 2, 300, 4, 78"/>
+		<validation:is-number doc:name="validate num2" doc:id="1725a641-7378-4f84-8b13-93933cceca5d" value="#[attributes.queryParams.num2]" numberType="FLOAT" message="Please enter a valid integer number example 2, 300, 4, 78"/>
+		<set-variable value="#[attributes.queryParams.num1 as Number]" doc:name="set num1" doc:id="d115a1f6-db4f-410e-8854-ea97023a9865" variableName="num1" />
+		<set-variable value="#[attributes.queryParams.num2 as Number]" doc:name="set num2" doc:id="5d5b10ac-55ae-4482-9c38-f4a44782bc52" variableName="num2" />
+		<set-variable value="#[payload.operator]" doc:name="Set Variable" doc:id="5d25393b-8159-4710-aa13-9862222f86d7" variableName="operator"/>
+	</sub-flow>
+	<flow name="calculator-witherror-handling-demoFlow" doc:id="b72dde04-303d-4ce1-acf4-add3d02193a1" >
+		<http:listener doc:name="Listener" doc:id="585ae8d8-dad0-4195-8af7-6231b7814715" config-ref="HTTP_Listener_config" path="calc"/>
+		<flow-ref doc:name="Flow Reference" doc:id="4570e474-4da2-42f9-bace-b88f2deb36f5" name="validate-the-inputs-and-set_vars" />
+		<choice doc:name="Choice" doc:id="a1c652d1-9289-4edb-b0c8-802c3d145d6e" >
+			<when expression='#[vars.operator == "add"]'>
+				<set-variable value="#[vars.num1 + vars.num2]" doc:name="Sum" doc:id="07d978ef-da59-44fb-9f0e-95f30fe17406" variableName="sum"/>
+				<logger level="INFO" doc:name="Logger" doc:id="18d23251-81c5-4019-99a8-6ce2d6aab3cc" message="The sum is #[vars.sum]"/>
+				<ee:transform doc:name="Display the sum" doc:id="b27fed21-463f-49f9-8503-7c635d82ef4b" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+
+{
+	"The sum is ": vars.sum as String  {format: "#,###.00#"}
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<when expression='#[vars.operator == "mult"]'>
+				<set-variable value="#[vars.num1*vars.num2]" doc:name="Product" doc:id="3ab28817-f07e-4674-904a-9cc4f4d51f15" variableName="product"/>
+				<logger level="INFO" doc:name="Logger" doc:id="bf407424-4c46-4fdf-812a-3aef80d4b76b" message="The product is #[vars.product]"/>
+				<set-payload value="#[payload]" doc:name="Set Payload" doc:id="de214ca3-ba42-4263-87b9-9daf3869a72f" />
+				<ee:transform doc:name="Display the product" doc:id="060aa62c-4502-4878-a97f-751980d35378" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"The product is ": vars.product as String {format: "#,###.00#"}
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<when expression='#[vars.operator=="div"]'>
+				<set-variable value="#[vars.num1/vars.num2]" doc:name="Quotient" doc:id="24b61ad9-4282-4947-a1de-61272cb3c381" variableName="quotient1"/>
+				<set-variable value="#[(vars.num1 mod vars.num2)]" doc:name="set remainder" doc:id="09cbaccb-38e0-460e-a92b-f76f135d9673" variableName="moduloye"/>
+				<logger level="INFO" doc:name="Logger" doc:id="97e92f22-b5f1-4d6b-a43f-5d067fd7863d" message="The quetient is #[vars.quotient1] and the remainder is #[vars.moduloye]" />
+				<set-payload value="#[payload]" doc:name="Set Payload" doc:id="a0120753-420d-47b0-bfb2-592a61ddf0f8" />
+				<ee:transform doc:name="Display the quotient and remainder" doc:id="062e860e-bfd5-4a73-a553-07939c41edf3" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"The quotient is ": vars.quotient1 as String  {format: "#,###.00"},
+	"The remainder is ":  vars.moduloye as String {format: "#,###.00#"}
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<when expression='#[vars.operator=="sub"]'>
+				<set-variable value="#[vars.num1-vars.num2]" doc:name="Difference" doc:id="acb683cb-82e0-486c-b4e5-10ac52336f2f" variableName="difference"/>
+				<logger level="INFO" doc:name="Logger" doc:id="554c7ff1-e683-4acc-aa71-92488d578e8a" message="The difference is #[vars.difference]"/>
+				<ee:transform doc:name="Display the difference" doc:id="f580ef52-89b0-4211-9da5-30584b85c5cb" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+{
+	"The difference is ": vars.difference as String {format: "#,###.00#"}
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise >
+				<logger level="WARN" doc:name="Logger" doc:id="399d02d3-1ca2-477c-9304-0f05a90aa07c" message="A valid number or operator is not entered. Please kindly check you inputs"/>
+				<ee:transform doc:name="Display error mesage" doc:id="1182ffee-5043-4f29-88df-c47a9f185f8e" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"status": 500,
+	"Error Message ": "A valid number or operator is not entered. Please kindly check you inputs"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+	</flow>
+</mule>
